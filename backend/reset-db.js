@@ -7,7 +7,7 @@ const config = {
   password: 'password',
   bucketName: 'hilton-reservations',
   adminEmail: 'admin@hilton.com',
-  adminPassword: 'admin123'
+  adminPassword: 'admin@hilton.com'
 };
 
 async function resetDatabase() {

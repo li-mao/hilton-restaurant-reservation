@@ -15,7 +15,7 @@ const config = {
   password: process.env.COUCHBASE_PASSWORD || 'password',
   bucketName: process.env.COUCHBASE_BUCKET || 'hilton-reservations',
   adminEmail: process.env.ADMIN_EMAIL || 'admin@hilton.com',
-  adminPassword: process.env.ADMIN_PASSWORD || 'admin123'
+  adminPassword: process.env.ADMIN_PASSWORD || 'admin@hilton.com'
 };
 
 let cluster = null;

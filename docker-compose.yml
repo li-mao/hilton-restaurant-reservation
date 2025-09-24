@@ -33,7 +33,7 @@ services:
       COUCHBASE_PASSWORD: password
       COUCHBASE_BUCKET: hilton-reservations
       ADMIN_EMAIL: admin@hilton.com
-      ADMIN_PASSWORD: admin123
+      ADMIN_PASSWORD: admin@hilton.com
     command: bash -c "cd /app && npm install couchbase bcryptjs && node scripts/robust-init.js"
     depends_on:
       - couchbase

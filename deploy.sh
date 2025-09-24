@@ -166,7 +166,7 @@ show_results() {
     echo ""
     echo "👤 默认管理员账户："
     echo "   邮箱: admin@hilton.com"
-    echo "   密码: admin123"
+    echo "   密码: admin@hilton.com"
     echo ""
     echo "🔧 管理命令："
     echo "   查看日志: docker-compose logs -f"
