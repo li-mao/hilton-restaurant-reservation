@@ -1,6 +1,12 @@
-# 希尔顿餐厅预订系统
+# 🏨 希尔顿餐厅预订系统
 
 一个功能完善的在线餐桌预订系统，为希尔顿餐厅的客人提供便捷的预订服务，同时帮助餐厅员工高效管理预订。
+
+[![Docker](https://img.shields.io/badge/Docker-就绪-blue?logo=docker)](https://www.docker.com/)
+[![Node.js](https://img.shields.io/badge/Node.js-20+-green?logo=node.js)](https://nodejs.org/)
+[![Vue.js](https://img.shields.io/badge/Vue.js-3.x-4FC08D?logo=vue.js)](https://vuejs.org/)
+[![Couchbase](https://img.shields.io/badge/Couchbase-数据库-orange?logo=couchbase)](https://www.couchbase.com/)
+[![许可证](https://img.shields.io/badge/许可证-ISC-yellow.svg)](LICENSE)
 
 ## 功能特色
 
@@ -64,12 +70,34 @@ hilton-restaurant-reservation/
 └── README.md
 ```
 
-## 安装指南
+## 🚀 快速开始
+
+### 一键部署（推荐）
+
+```bash
+# 克隆仓库
+git clone <repository-url>
+cd hilton-restaurant-reservation
+
+# 一键启动所有服务
+./deploy.sh
+```
+
+**访问应用：**
+- 🌐 前端应用: http://localhost:3000
+- 🔧 后端API: http://localhost:5000
+- 🗄️ 数据库管理: http://localhost:8091
+
+**默认管理员账户：**
+- 邮箱: admin@hilton.com
+- 密码: admin123
+
+## 📦 安装指南
 
 ### 环境要求
-- Node.js (v14 或更高版本)
-- Couchbase Server (本地或云服务)
-- npm 或 yarn
+- **Docker** 和 **Docker Compose**（推荐）
+- **Node.js** (v20 或更高版本) 用于手动安装
+- **npm** 或 **yarn**
 
 ### 后端设置
 
@@ -179,13 +207,55 @@ npm run lint          # 运行代码检查
 - `JWT_EXPIRE` - JWT过期时间
 - `LOG_LEVEL` - 日志级别
 
-## 部署
+## 🐳 Docker管理
 
-### Docker部署 (推荐)
+### 常用Docker命令
+
+```bash
+# 启动所有服务
+./deploy.sh
+
+# 停止所有服务
+docker-compose down
+
+# 重启特定服务
+docker-compose restart backend
+
+# 查看日志
+docker-compose logs -f
+
+# 查看特定服务日志
+docker-compose logs -f backend
+
+# 检查服务状态
+docker-compose ps
+
+# 进入容器
+docker-compose exec backend bash
+```
+
+### 数据库管理
+
+```bash
+# 重置数据库（⚠️ 这将删除所有数据）
+docker-compose exec backend node reset-db.js
+
+# 检查数据库状态
+docker-compose exec backend node check-data.js
+
+# 访问数据库管理界面
+# 打开 http://localhost:8091
+# 用户名: Administrator
+# 密码: password
+```
+
+## 🚀 部署
+
+### Docker部署（推荐）
 1. 确保已安装 Docker 和 Docker Compose
 2. 在项目根目录运行：
    ```bash
-   docker-compose up -d
+   ./deploy.sh
    ```
 3. 访问应用：
    - 前端：http://localhost:3000
@@ -264,5 +334,198 @@ npm run lint          # 运行代码检查
   - 员工管理功能
   - 响应式前端界面
 
-## 许可证
-ISC 许可证
+## 🔧 故障排除
+
+### 常见问题
+
+#### 1. 端口被占用
+```bash
+# 检查端口占用
+netstat -tulpn | grep :3000
+netstat -tulpn | grep :5000
+
+# 杀死占用进程
+sudo kill -9 <PID>
+```
+
+#### 2. 数据库连接问题
+```bash
+# 检查Couchbase状态
+docker-compose logs couchbase
+
+# 重启数据库
+docker-compose restart couchbase
+
+# 检查数据库连接
+curl -s http://localhost:8091/pools/default
+```
+
+#### 3. 权限问题
+```bash
+# 修复文件权限
+sudo chown -R $USER:$USER .
+
+# 修复Docker权限
+sudo chmod +x deploy.sh
+```
+
+#### 4. 内存问题
+```bash
+# 检查Docker资源使用
+docker stats
+
+# 清理Docker资源
+docker system prune -a
+```
+
+### 健康检查
+
+```bash
+# 检查后端健康状态
+curl -s http://localhost:5000/api/health
+
+# 检查前端
+curl -s http://localhost:3000
+
+# 检查数据库
+curl -s http://localhost:8091/pools/default
+```
+
+## 📊 监控
+
+### 日志管理
+```bash
+# 查看所有日志
+docker-compose logs -f
+
+# 查看特定服务日志
+docker-compose logs -f backend
+docker-compose logs -f frontend
+docker-compose logs -f couchbase
+
+# 保存日志到文件
+docker-compose logs > logs.txt
+```
+
+### 性能监控
+```bash
+# 监控资源使用
+docker stats
+
+# 检查容器健康状态
+docker-compose ps
+
+# 监控数据库性能
+# 访问Couchbase管理界面 http://localhost:8091
+```
+
+## 🧪 开发
+
+### 运行测试
+```bash
+# 后端测试
+cd backend && npm test
+
+# 前端测试
+cd frontend && npm run test:unit
+
+# 集成测试
+npm run test:integration
+```
+
+### 代码质量
+```bash
+# 后端代码检查
+cd backend && npm run lint
+
+# 前端代码检查
+cd frontend && npm run lint
+
+# 代码格式化
+npm run format
+```
+
+## 📚 附加资源
+
+- [Docker重启指南](DOCKER_RESTART_GUIDE.md) - 完整的Docker管理指南
+- [API文档](docs/api.md) - 详细的API文档
+- [数据库架构](docs/database.md) - 数据库设计和关系
+- [部署指南](docs/deployment.md) - 生产环境部署说明
+
+## 🤝 贡献
+
+1. Fork 仓库
+2. 创建功能分支: `git checkout -b feature/amazing-feature`
+3. 提交更改: `git commit -m '添加新功能'`
+4. 推送分支: `git push origin feature/amazing-feature`
+5. 提交 Pull Request
+
+### 开发指南
+- 遵循现有代码风格
+- 为新功能编写测试
+- 根据需要更新文档
+- 确保所有测试通过后再提交
+
+## 📄 许可证
+
+本项目采用 ISC 许可证 - 查看 [LICENSE](LICENSE) 文件了解详情。
+
+## 🙏 致谢
+
+- 使用现代Web技术构建
+- Docker容器化便于部署
+- Couchbase提供可扩展的数据存储
+- Vue.js 3提供响应式前端
+- Node.js提供强大的后端服务
+
+---
+
+## 🔧 高级故障排除
+
+### Couchbase初始化问题
+
+如果遇到认证失败或连接问题：
+
+```bash
+# 1. 检查Couchbase服务状态
+docker-compose logs couchbase
+
+# 2. 手动初始化集群
+docker-compose exec couchbase couchbase-cli cluster-init -c localhost:8091 \
+  --cluster-username Administrator --cluster-password password \
+  --services data,query,index,fts,eventing,analytics --cluster-ramsize 1024
+
+# 3. 手动创建存储桶
+docker-compose exec couchbase couchbase-cli bucket-create -c localhost:8091 \
+  -u Administrator -p password --bucket hilton-reservations \
+  --bucket-type couchbase --bucket-ramsize 100 --enable-flush 1
+
+# 4. 重新启动初始化
+docker-compose up -d couchbase-init
+
+# 5. 等待完成
+sleep 60
+
+# 6. 检查日志
+docker-compose logs couchbase-init
+```
+
+### 完全系统重置
+
+如果需要完全重置系统：
+
+```bash
+# 停止所有服务
+docker-compose down
+
+# 删除数据卷
+docker volume rm hilton-restaurant-reservation_couchbase_data
+
+# 清理Docker资源
+docker system prune -f
+
+# 使用部署脚本重启
+./deploy.sh
+```
+
+**需要帮助？** 查看[故障排除部分](#-故障排除)或在GitHub上提交问题。

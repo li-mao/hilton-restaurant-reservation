@@ -22,7 +22,7 @@ async function createAdmin() {
     console.log('✅ 连接成功');
     
     // 加密密码
-    const hashedPassword = await bcrypt.hash('admin@hilton.com', 10);
+    const hashedPassword = await bcrypt.hash('admin123', 10);
     
     // 创建管理员用户数据
     const adminId = `user::admin::${Date.now()}`;
@@ -53,7 +53,7 @@ async function createAdmin() {
     
     console.log('✅ 数据验证成功');
     console.log('📧 管理员邮箱: admin@hilton.com');
-    console.log('🔑 管理员密码: admin@hilton.com');
+    console.log('🔑 管理员密码: admin123');
     
     await cluster.close();
     console.log('🎉 管理员用户创建完成！');

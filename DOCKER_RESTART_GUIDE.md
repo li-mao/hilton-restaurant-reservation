@@ -174,7 +174,7 @@ docker logs hilton_couchbase_init --tail 30
 👤 检查管理员用户...
 ✅ 管理员用户创建并验证成功
 📧 邮箱: admin@hilton.com
-🔑 密码: admin@hilton.com
+🔑 密码: admin123
 ```
 
 ### 步骤 7: 验证系统状态
@@ -252,7 +252,7 @@ curl -s http://localhost:3000 | head -5
 系统初始化后会创建默认管理员账户：
 
 - **邮箱**: admin@hilton.com
-- **密码**: admin@hilton.com
+- **密码**: admin123
 - **角色**: admin
 
 ## 🔧 常用管理命令
@@ -426,7 +426,7 @@ echo "✅ 系统重启完成！"
 echo "🌐 前端: http://localhost:3000"
 echo "🔧 后端: http://localhost:5000"
 echo "🗄️  Couchbase: http://localhost:8091"
-echo "👤 管理员: admin@hilton.com / admin@hilton.com"
+echo "👤 管理员: admin@hilton.com / admin123"
 ```
 
 使用方法：
