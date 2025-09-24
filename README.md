@@ -5,7 +5,7 @@ A comprehensive online table reservation system for Hilton restaurants, allowing
 [![Docker](https://img.shields.io/badge/Docker-Ready-blue?logo=docker)](https://www.docker.com/)
 [![Node.js](https://img.shields.io/badge/Node.js-20+-green?logo=node.js)](https://nodejs.org/)
 [![Vue.js](https://img.shields.io/badge/Vue.js-3.x-4FC08D?logo=vue.js)](https://vuejs.org/)
-[![Couchbase](https://img.shields.io/badge/Couchbase-Database-orange?logo=couchbase)](https://www.couchbase.com/)
+[![MongoDB](https://img.shields.io/badge/MongoDB-Database-green?logo=mongodb)](https://www.mongodb.com/)
 [![License](https://img.shields.io/badge/License-ISC-yellow.svg)](LICENSE)
 
 ## Features
@@ -39,7 +39,7 @@ cd hilton-restaurant-reservation
 **Access the application:**
 - 🌐 Frontend: http://localhost:3000
 - 🔧 Backend API: http://localhost:5000
-- 🗄️ Database Admin: http://localhost:8091
+- 🗄️ MongoDB: mongodb://localhost:27017
 
 **Default Admin Account:**
 - Email: admin@hilton.com
@@ -50,7 +50,7 @@ cd hilton-restaurant-reservation
 ### Backend
 - **Node.js 20+** with Express.js
 - **GraphQL** with Apollo Server
-- **Couchbase** for data persistence
+- **MongoDB** for data persistence
 - **JWT** for authentication
 - **Winston** for logging
 - **Joi** for input validation
@@ -142,10 +142,8 @@ hilton-restaurant-reservation/
    ```env
    NODE_ENV=development
    PORT=5000
-   COUCHBASE_CONNECTION_STRING=couchbase://localhost:8091
-   COUCHBASE_USERNAME=Administrator
-   COUCHBASE_PASSWORD=password
-   COUCHBASE_BUCKET=hilton-reservations
+   MONGODB_URI=mongodb://localhost:27017
+   MONGODB_DB=hilton-reservations
    JWT_SECRET=your-super-secret-jwt-key
    JWT_EXPIRE=7d
    LOG_LEVEL=info
@@ -256,16 +254,8 @@ docker compose exec backend bash
 ### Database Management
 
 ```bash
-# Reset database (⚠️ This will delete all data)
-docker compose exec backend node reset-db.js
-
-# Check database status
-docker-compose exec backend node check-data.js
-
-# View database admin interface
-# Open http://localhost:8091 in browser
-# Username: Administrator
-# Password: password
+# Access MongoDB
+# Default connection string: mongodb://localhost:27017
 ```
 
 ## 🚀 Deployment
@@ -355,21 +345,8 @@ sudo kill -9 <PID>
 
 **Solutions**:
 ```bash
-# Check Couchbase status
-docker compose logs couchbase
-
-# Manual cluster initialization
-docker compose exec couchbase couchbase-cli cluster-init -c localhost:8091 \
-  --cluster-username Administrator --cluster-password password \
-  --services data,query,index,fts,eventing,analytics --cluster-ramsize 1024
-
-# Create bucket manually
-docker compose exec couchbase couchbase-cli bucket-create -c localhost:8091 \
-  -u Administrator -p password --bucket hilton-reservations \
-  --bucket-type couchbase --bucket-ramsize 100 --enable-flush 1
-
-# Restart initialization
-docker compose up -d couchbase-init
+# Check MongoDB logs
+docker compose logs mongodb
 
 # Restart backend service
 docker compose restart backend
@@ -402,8 +379,8 @@ curl -s http://localhost:5000/api/health
 # Check frontend
 curl -s http://localhost:3000
 
-# Check database
-curl -s http://localhost:8091/pools/default
+# Check database (connect via mongo client)
+# mongodb://localhost:27017
 ```
 
 ## 📊 Monitoring
@@ -416,7 +393,7 @@ docker compose logs -f
 # View specific service logs
 docker compose logs -f backend
 docker compose logs -f frontend
-docker compose logs -f couchbase
+docker compose logs -f mongodb
 
 # Save logs to file
 docker compose logs > logs.txt
@@ -430,8 +407,8 @@ docker stats
 # Check container health
 docker compose ps
 
-# Monitor database performance
-# Access Couchbase admin at http://localhost:8091
+# Monitor database (container)
+# docker stats mongodb
 ```
 
 ## 🧪 Development
@@ -499,32 +476,11 @@ This project is licensed under the ISC License - see the [LICENSE](LICENSE) file
 
 ## 🔧 Advanced Troubleshooting
 
-### Couchbase Initialization Issues
-
-If you encounter authentication failures or connection issues:
+### MongoDB Connection Issues
 
 ```bash
-# 1. Check Couchbase service status
-docker compose logs couchbase
-
-# 2. Manual cluster initialization
-docker compose exec couchbase couchbase-cli cluster-init -c localhost:8091 \
-  --cluster-username Administrator --cluster-password password \
-  --services data,query,index,fts,eventing,analytics --cluster-ramsize 1024
-
-# 3. Create bucket manually
-docker compose exec couchbase couchbase-cli bucket-create -c localhost:8091 \
-  -u Administrator -p password --bucket hilton-reservations \
-  --bucket-type couchbase --bucket-ramsize 100 --enable-flush 1
-
-# 4. Restart initialization
-docker compose up -d couchbase-init
-
-# 5. Wait for completion
-sleep 60
-
-# 6. Check logs
-docker compose logs couchbase-init
+# Check MongoDB service status
+docker compose logs mongodb
 ```
 
 ### Complete System Reset
@@ -535,8 +491,8 @@ If you need to completely reset the system:
 # Stop all services
 docker compose down
 
-# Remove data volume
-docker volume rm hilton-restaurant-reservation_couchbase_data
+# Remove MongoDB data volume (if applicable)
+# docker volume rm hilton-restaurant-reservation_mongodb_data
 
 # Clean Docker resources
 docker system prune -f

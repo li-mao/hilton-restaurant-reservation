@@ -73,65 +73,6 @@ start_services() {
     log_success "服务启动完成"
 }
 
-# 等待Couchbase服务启动
-wait_for_couchbase() {
-    log_info "等待Couchbase服务启动..."
-    timeout=60
-    while [ $timeout -gt 0 ]; do
-        if docker compose exec -T couchbase curl -s http://localhost:8091/pools/default >/dev/null 2>&1; then
-            log_success "Couchbase服务就绪"
-            return 0
-        fi
-        sleep 2
-        timeout=$((timeout-2))
-    done
-    
-    log_warning "Couchbase服务启动超时，尝试手动初始化..."
-    return 1
-}
-
-# 手动初始化Couchbase集群
-initialize_couchbase_manually() {
-    log_info "手动初始化Couchbase集群..."
-    
-    # 等待Couchbase服务完全启动
-    log_info "等待Couchbase服务完全启动..."
-    sleep 30
-    
-    # 初始化集群
-    log_info "初始化Couchbase集群..."
-    if docker compose exec couchbase couchbase-cli cluster-init -c localhost:8091 \
-        --cluster-username Administrator \
-        --cluster-password password \
-        --services data,query,index,fts,eventing,analytics \
-        --cluster-ramsize 1024 >/dev/null 2>&1; then
-        log_success "Couchbase集群初始化成功"
-    else
-        log_warning "Couchbase集群可能已经初始化"
-    fi
-    
-    # 创建存储桶
-    log_info "创建存储桶..."
-    if docker compose exec couchbase couchbase-cli bucket-create -c localhost:8091 \
-        -u Administrator -p password \
-        --bucket hilton-reservations \
-        --bucket-type couchbase \
-        --bucket-ramsize 100 \
-        --enable-flush 1 >/dev/null 2>&1; then
-        log_success "存储桶创建成功"
-    else
-        log_warning "存储桶可能已经存在"
-    fi
-    
-    # 重新启动初始化容器
-    log_info "重新启动数据库初始化..."
-    docker compose up -d couchbase-init
-    
-    # 等待初始化完成
-    log_info "等待数据库初始化完成..."
-    sleep 60
-}
-
 # 等待后端服务
 wait_for_backend() {
     log_info "等待后端服务..."
@@ -174,14 +115,6 @@ health_check() {
     log_info "检查服务状态..."
     docker compose ps
     
-    # 检查Couchbase连接
-    log_info "检查Couchbase连接..."
-    if curl -s http://localhost:8091/pools/default >/dev/null 2>&1; then
-        log_success "Couchbase连接正常"
-    else
-        log_warning "Couchbase连接异常"
-    fi
-    
     # 检查后端健康状态
     log_info "检查后端健康状态..."
     if curl -s http://localhost:5000/api/health >/dev/null 2>&1; then
@@ -216,26 +149,8 @@ retry_database_connection() {
         log_success "数据库连接成功"
         return 0
     else
-        log_warning "数据库连接仍然失败，请检查Couchbase服务状态"
+        log_warning "数据库连接仍然失败，请检查 MongoDB 服务与网络配置"
         return 1
-    fi
-}
-
-# 创建管理员用户
-create_admin_user() {
-    log_info "检查管理员用户..."
-    
-    # 检查是否已有管理员用户
-    if curl -s http://localhost:5000/api/health | grep -q "Admin user exists"; then
-        log_success "管理员用户已存在"
-        return 0
-    fi
-    
-    log_info "创建管理员用户..."
-    if docker compose exec backend node create_admin.js >/dev/null 2>&1; then
-        log_success "管理员用户创建成功"
-    else
-        log_warning "管理员用户创建失败，请手动创建"
     fi
 }
 
@@ -249,7 +164,7 @@ show_results() {
     echo "🌐 访问地址："
     echo "   前端应用: http://localhost:3000"
     echo "   后端API:  http://localhost:5000"
-    echo "   数据库管理: http://localhost:8091"
+    echo "   MongoDB:   mongodb://localhost:27017"
     echo ""
     echo "👤 默认管理员账户："
     echo "   邮箱: admin@hilton.com"
@@ -273,7 +188,7 @@ handle_error() {
     echo "2. 查看服务日志: docker compose logs"
     echo "3. 检查端口占用: netstat -tulpn | grep :3000"
     echo "4. 重启Docker服务: sudo systemctl restart docker"
-    echo "5. 手动初始化Couchbase: 参考README文档"
+    echo "5. 检查 MongoDB: docker compose logs mongodb"
     echo ""
     exit 1
 }
@@ -288,11 +203,6 @@ main() {
     cleanup
     start_services
     
-    # 等待Couchbase服务
-    if ! wait_for_couchbase; then
-        initialize_couchbase_manually
-    fi
-    
     # 等待其他服务
     wait_for_backend
     wait_for_frontend
@@ -306,12 +216,9 @@ main() {
         if retry_database_connection; then
             log_success "数据库连接修复成功"
         else
-            log_error "数据库连接修复失败，请手动检查Couchbase服务"
+            log_error "数据库连接修复失败，请手动检查 MongoDB 服务"
         fi
     fi
-    
-    # 创建管理员用户
-    create_admin_user
     
     show_results
 }

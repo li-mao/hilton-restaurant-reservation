@@ -5,7 +5,7 @@
 [![Docker](https://img.shields.io/badge/Docker-就绪-blue?logo=docker)](https://www.docker.com/)
 [![Node.js](https://img.shields.io/badge/Node.js-20+-green?logo=node.js)](https://nodejs.org/)
 [![Vue.js](https://img.shields.io/badge/Vue.js-3.x-4FC08D?logo=vue.js)](https://vuejs.org/)
-[![Couchbase](https://img.shields.io/badge/Couchbase-数据库-orange?logo=couchbase)](https://www.couchbase.com/)
+[![MongoDB](https://img.shields.io/badge/MongoDB-数据库-green?logo=mongodb)](https://www.mongodb.com/)
 [![许可证](https://img.shields.io/badge/许可证-ISC-yellow.svg)](LICENSE)
 
 ## 功能特色
@@ -28,7 +28,7 @@
 ### 后端技术
 - **Node.js** + Express.js
 - **GraphQL** + Apollo Server
-- **Couchbase** 数据持久化
+- **MongoDB** 数据持久化
 - **JWT** 身份验证
 - **Winston** 日志记录
 - **Joi** 输入验证
@@ -86,7 +86,7 @@ cd hilton-restaurant-reservation
 **访问应用：**
 - 🌐 前端应用: http://localhost:3000
 - 🔧 后端API: http://localhost:5000
-- 🗄️ 数据库管理: http://localhost:8091
+- 🗄️ MongoDB: mongodb://localhost:27017
 
 **默认管理员账户：**
 - 邮箱: admin@hilton.com
@@ -120,10 +120,8 @@ cd hilton-restaurant-reservation
    ```env
    NODE_ENV=development
    PORT=5000
-   COUCHBASE_CONNECTION_STRING=couchbase://localhost:8091
-   COUCHBASE_USERNAME=Administrator
-   COUCHBASE_PASSWORD=password
-   COUCHBASE_BUCKET=hilton-reservations
+   MONGODB_URI=mongodb://localhost:27017
+   MONGODB_DB=hilton-reservations
    JWT_SECRET=你的超级密钥
    JWT_EXPIRE=7d
    LOG_LEVEL=info
@@ -199,10 +197,8 @@ npm run lint          # 运行代码检查
 ### 后端 (.env)
 - `NODE_ENV` - 环境设置 (development/production)
 - `PORT` - 服务器端口
-- `COUCHBASE_CONNECTION_STRING` - Couchbase连接字符串
-- `COUCHBASE_USERNAME` - Couchbase用户名
-- `COUCHBASE_PASSWORD` - Couchbase密码
-- `COUCHBASE_BUCKET` - Couchbase存储桶名称
+- `MONGODB_URI` - MongoDB连接字符串
+- `MONGODB_DB` - MongoDB数据库名称
 - `JWT_SECRET` - JWT密钥
 - `JWT_EXPIRE` - JWT过期时间
 - `LOG_LEVEL` - 日志级别
@@ -237,16 +233,8 @@ docker-compose exec backend bash
 ### 数据库管理
 
 ```bash
-# 重置数据库（⚠️ 这将删除所有数据）
-docker-compose exec backend node reset-db.js
-
-# 检查数据库状态
-docker-compose exec backend node check-data.js
-
-# 访问数据库管理界面
-# 打开 http://localhost:8091
-# 用户名: Administrator
-# 密码: password
+# 访问 MongoDB（默认连接字符串）
+# mongodb://localhost:27017
 ```
 
 ## 🚀 部署
@@ -260,7 +248,7 @@ docker-compose exec backend node check-data.js
 3. 访问应用：
    - 前端：http://localhost:3000
    - 后端API：http://localhost:5000
-   - Couchbase管理界面：http://localhost:8091
+   - MongoDB：mongodb://localhost:27017
 
 ### 手动部署
 
@@ -317,7 +305,7 @@ docker-compose exec backend node check-data.js
 ## 开发团队
 - 后端开发：Node.js + Express + GraphQL
 - 前端开发：Vue.js 3 + TypeScript
-- 数据库：Couchbase
+- 数据库：MongoDB
 - 架构设计：RESTful + GraphQL混合架构
 
 ## 技术支持
@@ -350,14 +338,8 @@ sudo kill -9 <PID>
 
 #### 2. 数据库连接问题
 ```bash
-# 检查Couchbase状态
-docker-compose logs couchbase
-
-# 重启数据库
-docker-compose restart couchbase
-
-# 检查数据库连接
-curl -s http://localhost:8091/pools/default
+# 检查 MongoDB 日志
+docker-compose logs mongodb
 ```
 
 #### 3. 权限问题
@@ -387,8 +369,8 @@ curl -s http://localhost:5000/api/health
 # 检查前端
 curl -s http://localhost:3000
 
-# 检查数据库
-curl -s http://localhost:8091/pools/default
+# 检查数据库（通过连接字符串或 Mongo 客户端）
+# mongodb://localhost:27017
 ```
 
 ## 📊 监控
@@ -401,7 +383,7 @@ docker-compose logs -f
 # 查看特定服务日志
 docker-compose logs -f backend
 docker-compose logs -f frontend
-docker-compose logs -f couchbase
+docker-compose logs -f mongodb
 
 # 保存日志到文件
 docker-compose logs > logs.txt
@@ -415,8 +397,8 @@ docker stats
 # 检查容器健康状态
 docker-compose ps
 
-# 监控数据库性能
-# 访问Couchbase管理界面 http://localhost:8091
+# 监控数据库（容器资源）
+# docker stats mongodb
 ```
 
 ## 🧪 开发
@@ -488,26 +470,22 @@ npm run format
 
 ```bash
 # 1. 检查Couchbase服务状态
-docker-compose logs couchbase
+docker-compose logs mongodb
 
 # 2. 手动初始化集群
-docker-compose exec couchbase couchbase-cli cluster-init -c localhost:8091 \
-  --cluster-username Administrator --cluster-password password \
-  --services data,query,index,fts,eventing,analytics --cluster-ramsize 1024
+echo "当前部署无需手动初始化 MongoDB 集群"
 
 # 3. 手动创建存储桶
-docker-compose exec couchbase couchbase-cli bucket-create -c localhost:8091 \
-  -u Administrator -p password --bucket hilton-reservations \
-  --bucket-type couchbase --bucket-ramsize 100 --enable-flush 1
+echo "MongoDB 无存储桶概念"
 
 # 4. 重新启动初始化
-docker-compose up -d couchbase-init
+echo "无需初始化容器"
 
 # 5. 等待完成
 sleep 60
 
 # 6. 检查日志
-docker-compose logs couchbase-init
+docker-compose logs mongodb
 ```
 
 ### 完全系统重置
@@ -519,7 +497,7 @@ docker-compose logs couchbase-init
 docker-compose down
 
 # 删除数据卷
-docker volume rm hilton-restaurant-reservation_couchbase_data
+# 如需重置 MongoDB 数据卷，请删除 mongodb_data 卷
 
 # 清理Docker资源
 docker system prune -f

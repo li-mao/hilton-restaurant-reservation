@@ -5,35 +5,27 @@
  * 验证所有服务是否正常运行
  */
 
-const couchbase = require('couchbase');
+const { MongoClient } = require('mongodb');
 const bcrypt = require('bcryptjs');
 
 const config = {
-  connectionString: process.env.COUCHBASE_CONNECTION_STRING || 'couchbase://localhost:8091',
-  username: process.env.COUCHBASE_USERNAME || 'Administrator',
-  password: process.env.COUCHBASE_PASSWORD || 'password',
-  bucketName: process.env.COUCHBASE_BUCKET || 'hilton-reservations',
+  mongoUri: process.env.MONGODB_URI || 'mongodb://localhost:27017',
+  dbName: process.env.MONGODB_DB || 'hilton-reservations',
   adminEmail: process.env.ADMIN_EMAIL || 'admin@hilton.com',
   adminPassword: process.env.ADMIN_PASSWORD || 'admin123'
 };
 
-async function checkCouchbaseConnection() {
+async function checkMongoConnection() {
   try {
-    console.log('🔍 检查Couchbase连接...');
-    const cluster = await couchbase.connect(config.connectionString, {
-      username: config.username,
-      password: config.password,
-      timeout: 5000
-    });
-    
-    const bucket = cluster.bucket(config.bucketName);
-    await bucket.waitUntilReady();
-    
-    console.log('✅ Couchbase连接正常');
-    await cluster.close();
+    console.log('🔍 检查MongoDB连接...');
+    const client = new MongoClient(config.mongoUri, { serverSelectionTimeoutMS: 5000 });
+    await client.connect();
+    await client.db(config.dbName).command({ ping: 1 });
+    console.log('✅ MongoDB连接正常');
+    await client.close();
     return true;
   } catch (error) {
-    console.error('❌ Couchbase连接失败:', error.message);
+    console.error('❌ MongoDB连接失败:', error.message);
     return false;
   }
 }
@@ -41,38 +33,23 @@ async function checkCouchbaseConnection() {
 async function checkAdminUser() {
   try {
     console.log('🔍 检查管理员用户...');
-    const cluster = await couchbase.connect(config.connectionString, {
-      username: config.username,
-      password: config.password,
-      timeout: 5000
-    });
-    
-    const bucket = cluster.bucket(config.bucketName);
-    const defaultCollection = bucket.defaultCollection();
-    
-    // 检查邮箱索引
-    const emailResult = await defaultCollection.get(`email::${config.adminEmail}`);
-    const userId = emailResult.content.userId;
-    
-    // 检查用户数据
-    const userResult = await defaultCollection.get(userId);
-    
-    if (!userResult.content.password) {
-      throw new Error('管理员用户密码字段缺失');
-    }
-    
-    if (userResult.content.role !== 'admin') {
-      throw new Error('管理员用户角色不正确');
-    }
-    
-    // 验证密码
-    const isPasswordValid = await bcrypt.compare(config.adminPassword, userResult.content.password);
+    const client = new MongoClient(config.mongoUri, { serverSelectionTimeoutMS: 5000 });
+    await client.connect();
+    const db = client.db(config.dbName);
+    const users = db.collection('users');
+
+    const user = await users.findOne({ email: config.adminEmail.toLowerCase() });
+    if (!user) throw new Error('管理员用户不存在');
+    if (!user.password) throw new Error('管理员用户密码字段缺失');
+    if (user.role !== 'admin') throw new Error('管理员用户角色不正确');
+
+    const isPasswordValid = await bcrypt.compare(config.adminPassword, user.password);
     if (!isPasswordValid) {
       throw new Error('管理员用户密码验证失败');
     }
-    
+
     console.log('✅ 管理员用户正常');
-    await cluster.close();
+    await client.close();
     return true;
   } catch (error) {
     console.error('❌ 管理员用户检查失败:', error.message);
@@ -119,7 +96,7 @@ async function performHealthCheck() {
   console.log('=====================================');
   
   const checks = [
-    { name: 'Couchbase连接', fn: checkCouchbaseConnection },
+    { name: 'MongoDB连接', fn: checkMongoConnection },
     { name: '管理员用户', fn: checkAdminUser },
     { name: '后端API', fn: checkBackendAPI },
     { name: '前端应用', fn: checkFrontend }
