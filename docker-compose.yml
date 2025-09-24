@@ -21,7 +21,7 @@ services:
     restart: unless-stopped
 
   couchbase-init:
-    image: node:20
+    image: docker.m.daocloud.io/library/node:20
     container_name: hilton_couchbase_init
     working_dir: /app
     volumes:
@@ -40,7 +40,7 @@ services:
     restart: "no"
 
   backend:
-    image: node:20
+    image: docker.m.daocloud.io/library/node:20
     container_name: hilton_backend
     working_dir: /app
     volumes:
@@ -64,7 +64,7 @@ services:
     restart: unless-stopped
 
   frontend:
-    image: node:20
+    image: docker.m.daocloud.io/library/node:20
     container_name: hilton_frontend
     working_dir: /app
     volumes:

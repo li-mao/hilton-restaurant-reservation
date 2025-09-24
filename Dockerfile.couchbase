@@ -1,4 +1,4 @@
-FROM couchbase:latest
+FROM docker.m.daocloud.io/library/couchbase:latest
 
 # 安装 OpenJDK 11 (查询服务需要Java)
 RUN apt-get update && \
