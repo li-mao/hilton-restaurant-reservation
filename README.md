@@ -235,29 +235,29 @@ npm run lint          # Run linter
 ./deploy.sh
 
 # Stop all services
-docker-compose down
+docker compose down
 
 # Restart specific service
-docker-compose restart backend
+docker compose restart backend
 
 # View logs
-docker-compose logs -f
+docker compose logs -f
 
 # View specific service logs
-docker-compose logs -f backend
+docker compose logs -f backend
 
 # Check service status
-docker-compose ps
+docker compose ps
 
 # Enter container shell
-docker-compose exec backend bash
+docker compose exec backend bash
 ```
 
 ### Database Management
 
 ```bash
 # Reset database (⚠️ This will delete all data)
-docker-compose exec backend node reset-db.js
+docker compose exec backend node reset-db.js
 
 # Check database status
 docker-compose exec backend node check-data.js
@@ -280,7 +280,7 @@ docker-compose exec backend node check-data.js
 
 2. **Deploy with Docker Compose:**
    ```bash
-   docker-compose -f docker-compose.prod.yml up -d
+   docker compose -f docker-compose.prod.yml up -d
    ```
 
 3. **Set up reverse proxy (Nginx):**
@@ -356,23 +356,23 @@ sudo kill -9 <PID>
 **Solutions**:
 ```bash
 # Check Couchbase status
-docker-compose logs couchbase
+docker compose logs couchbase
 
 # Manual cluster initialization
-docker-compose exec couchbase couchbase-cli cluster-init -c localhost:8091 \
+docker compose exec couchbase couchbase-cli cluster-init -c localhost:8091 \
   --cluster-username Administrator --cluster-password password \
   --services data,query,index,fts,eventing,analytics --cluster-ramsize 1024
 
 # Create bucket manually
-docker-compose exec couchbase couchbase-cli bucket-create -c localhost:8091 \
+docker compose exec couchbase couchbase-cli bucket-create -c localhost:8091 \
   -u Administrator -p password --bucket hilton-reservations \
   --bucket-type couchbase --bucket-ramsize 100 --enable-flush 1
 
 # Restart initialization
-docker-compose up -d couchbase-init
+docker compose up -d couchbase-init
 
 # Restart backend service
-docker-compose restart backend
+docker compose restart backend
 ```
 
 #### 3. Permission Issues
@@ -411,15 +411,15 @@ curl -s http://localhost:8091/pools/default
 ### Log Management
 ```bash
 # View all logs
-docker-compose logs -f
+docker compose logs -f
 
 # View specific service logs
-docker-compose logs -f backend
-docker-compose logs -f frontend
-docker-compose logs -f couchbase
+docker compose logs -f backend
+docker compose logs -f frontend
+docker compose logs -f couchbase
 
 # Save logs to file
-docker-compose logs > logs.txt
+docker compose logs > logs.txt
 ```
 
 ### Performance Monitoring
@@ -428,7 +428,7 @@ docker-compose logs > logs.txt
 docker stats
 
 # Check container health
-docker-compose ps
+docker compose ps
 
 # Monitor database performance
 # Access Couchbase admin at http://localhost:8091
@@ -505,26 +505,26 @@ If you encounter authentication failures or connection issues:
 
 ```bash
 # 1. Check Couchbase service status
-docker-compose logs couchbase
+docker compose logs couchbase
 
 # 2. Manual cluster initialization
-docker-compose exec couchbase couchbase-cli cluster-init -c localhost:8091 \
+docker compose exec couchbase couchbase-cli cluster-init -c localhost:8091 \
   --cluster-username Administrator --cluster-password password \
   --services data,query,index,fts,eventing,analytics --cluster-ramsize 1024
 
 # 3. Create bucket manually
-docker-compose exec couchbase couchbase-cli bucket-create -c localhost:8091 \
+docker compose exec couchbase couchbase-cli bucket-create -c localhost:8091 \
   -u Administrator -p password --bucket hilton-reservations \
   --bucket-type couchbase --bucket-ramsize 100 --enable-flush 1
 
 # 4. Restart initialization
-docker-compose up -d couchbase-init
+docker compose up -d couchbase-init
 
 # 5. Wait for completion
 sleep 60
 
 # 6. Check logs
-docker-compose logs couchbase-init
+docker compose logs couchbase-init
 ```
 
 ### Complete System Reset
@@ -533,7 +533,7 @@ If you need to completely reset the system:
 
 ```bash
 # Stop all services
-docker-compose down
+docker compose down
 
 # Remove data volume
 docker volume rm hilton-restaurant-reservation_couchbase_data

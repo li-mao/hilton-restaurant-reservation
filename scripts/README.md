@@ -19,11 +19,25 @@
   - 监控系统资源
 
 ### 📋 使用方法
+#### 系统环境
+debian 13
+
+#### 安装docker依赖
+```
+curl -fsSL https://get.docker.com | bash -s docker
+
+# 1 将当前用户加入 docker 组
+sudo usermod -aG docker $USER
+
+# 2 使组权限立即生效（任选其一）
+newgrp docker         # 临时生效，当前 shell
+# 或者完全退出并重新登录会话
+```
 
 #### 初始化系统
 ```bash
 # 使用Docker Compose自动初始化
-docker-compose up -d
+docker compose up -d
 
 # 或手动运行初始化脚本
 node scripts/robust-init.js

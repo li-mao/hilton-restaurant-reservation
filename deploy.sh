@@ -40,8 +40,8 @@ check_docker() {
         exit 1
     fi
     
-    if ! command -v docker-compose &> /dev/null; then
-        log_error "Docker Compose未安装，请先安装Docker Compose"
+    if ! docker compose version &> /dev/null; then
+        log_error "未检测到 Docker Compose v2（docker compose）。请安装 Docker Compose 插件。"
         exit 1
     fi
     
@@ -51,7 +51,7 @@ check_docker() {
 # 停止现有服务
 stop_services() {
     log_info "停止现有服务..."
-    docker-compose down --remove-orphans 2>/dev/null || true
+    docker compose down --remove-orphans 2>/dev/null || true
     log_success "现有服务已停止"
 }
 
@@ -65,7 +65,7 @@ cleanup() {
 # 启动服务
 start_services() {
     log_info "启动服务..."
-    docker-compose up -d
+    docker compose up -d
     
     log_info "等待服务启动..."
     sleep 10
@@ -78,7 +78,7 @@ wait_for_couchbase() {
     log_info "等待Couchbase服务启动..."
     timeout=60
     while [ $timeout -gt 0 ]; do
-        if docker-compose exec -T couchbase curl -s http://localhost:8091/pools/default >/dev/null 2>&1; then
+        if docker compose exec -T couchbase curl -s http://localhost:8091/pools/default >/dev/null 2>&1; then
             log_success "Couchbase服务就绪"
             return 0
         fi
@@ -100,7 +100,7 @@ initialize_couchbase_manually() {
     
     # 初始化集群
     log_info "初始化Couchbase集群..."
-    if docker-compose exec couchbase couchbase-cli cluster-init -c localhost:8091 \
+    if docker compose exec couchbase couchbase-cli cluster-init -c localhost:8091 \
         --cluster-username Administrator \
         --cluster-password password \
         --services data,query,index,fts,eventing,analytics \
@@ -112,7 +112,7 @@ initialize_couchbase_manually() {
     
     # 创建存储桶
     log_info "创建存储桶..."
-    if docker-compose exec couchbase couchbase-cli bucket-create -c localhost:8091 \
+    if docker compose exec couchbase couchbase-cli bucket-create -c localhost:8091 \
         -u Administrator -p password \
         --bucket hilton-reservations \
         --bucket-type couchbase \
@@ -125,7 +125,7 @@ initialize_couchbase_manually() {
     
     # 重新启动初始化容器
     log_info "重新启动数据库初始化..."
-    docker-compose up -d couchbase-init
+    docker compose up -d couchbase-init
     
     # 等待初始化完成
     log_info "等待数据库初始化完成..."
@@ -172,7 +172,7 @@ health_check() {
     
     # 检查服务状态
     log_info "检查服务状态..."
-    docker-compose ps
+    docker compose ps
     
     # 检查Couchbase连接
     log_info "检查Couchbase连接..."
@@ -205,7 +205,7 @@ retry_database_connection() {
     
     # 重启后端服务
     log_info "重启后端服务..."
-    docker-compose restart backend
+    docker compose restart backend
     
     # 等待后端服务启动
     log_info "等待后端服务启动..."
@@ -232,7 +232,7 @@ create_admin_user() {
     fi
     
     log_info "创建管理员用户..."
-    if docker-compose exec backend node create_admin.js >/dev/null 2>&1; then
+    if docker compose exec backend node create_admin.js >/dev/null 2>&1; then
         log_success "管理员用户创建成功"
     else
         log_warning "管理员用户创建失败，请手动创建"
@@ -256,9 +256,9 @@ show_results() {
     echo "   密码: admin123"
     echo ""
     echo "🔧 管理命令："
-    echo "   查看日志: docker-compose logs -f"
-    echo "   停止服务: docker-compose down"
-    echo "   重启服务: docker-compose restart"
+    echo "   查看日志: docker compose logs -f"
+    echo "   停止服务: docker compose down"
+    echo "   重启服务: docker compose restart"
     echo "   健康检查: node scripts/health-check.js"
     echo ""
     echo "====================================="
@@ -270,7 +270,7 @@ handle_error() {
     echo ""
     echo "🔍 故障排除："
     echo "1. 检查Docker服务是否运行: sudo systemctl status docker"
-    echo "2. 查看服务日志: docker-compose logs"
+    echo "2. 查看服务日志: docker compose logs"
     echo "3. 检查端口占用: netstat -tulpn | grep :3000"
     echo "4. 重启Docker服务: sudo systemctl restart docker"
     echo "5. 手动初始化Couchbase: 参考README文档"
