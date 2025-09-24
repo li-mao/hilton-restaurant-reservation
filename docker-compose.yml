@@ -1,0 +1,84 @@
+services:
+  couchbase:
+    build:
+      context: .
+      dockerfile: Dockerfile.couchbase
+    container_name: hilton_couchbase
+    ports:
+      - "8091:8091"
+      - "8092:8092"
+      - "8093:8093"
+      - "8094:8094"
+      - "8095:8095"
+      - "8096:8096"
+      - "11210:11210"
+    volumes:
+      - couchbase_data:/opt/couchbase/var
+    environment:
+      - COUCHBASE_ADMINISTRATOR_USERNAME=Administrator
+      - COUCHBASE_ADMINISTRATOR_PASSWORD=password
+      - COUCHBASE_SERVICES=data,query,index,fts,eventing,analytics
+    restart: unless-stopped
+
+  couchbase-init:
+    image: node:20
+    container_name: hilton_couchbase_init
+    working_dir: /app
+    volumes:
+      - ./scripts:/app/scripts
+      - ./backend:/app/backend
+    environment:
+      COUCHBASE_CONNECTION_STRING: couchbase://couchbase
+      COUCHBASE_USERNAME: Administrator
+      COUCHBASE_PASSWORD: password
+      COUCHBASE_BUCKET: hilton-reservations
+      ADMIN_EMAIL: admin@hilton.com
+      ADMIN_PASSWORD: admin123
+    command: bash -c "cd /app && npm install couchbase bcryptjs && node scripts/robust-init.js"
+    depends_on:
+      - couchbase
+    restart: "no"
+
+  backend:
+    image: node:20
+    container_name: hilton_backend
+    working_dir: /app
+    volumes:
+      - ./backend:/app
+    environment:
+      NODE_ENV: development
+      PORT: "5000"
+      COUCHBASE_CONNECTION_STRING: couchbase://couchbase
+      COUCHBASE_USERNAME: Administrator
+      COUCHBASE_PASSWORD: password
+      COUCHBASE_BUCKET: hilton-reservations
+      JWT_SECRET: change-me-in-prod
+      JWT_EXPIRE: 7d
+      LOG_LEVEL: info
+    command: bash -c "npm install && sleep 30 && node src/server.js"
+    ports:
+      - "5000:5000"
+    depends_on:
+      - couchbase
+      - couchbase-init
+    restart: unless-stopped
+
+  frontend:
+    image: node:20
+    container_name: hilton_frontend
+    working_dir: /app
+    volumes:
+      - ./frontend:/app
+    environment:
+      # 使 Vite 在容器中可从宿主访问
+      HOST: 0.0.0.0
+      CHOKIDAR_USEPOLLING: "true"
+    command: sh -c "npm install && npm run dev -- --host 0.0.0.0 --port 3000"
+    ports:
+      - "3000:3000"
+    depends_on:
+      - backend
+    restart: unless-stopped
+
+volumes:
+  couchbase_data:
