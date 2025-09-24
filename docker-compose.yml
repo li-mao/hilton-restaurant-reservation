@@ -20,6 +20,8 @@ services:
       PORT: "5000"
       MONGODB_URI: mongodb://mongodb:27017
       MONGODB_DB: hilton-reservations
+      ADMIN_EMAIL: admin@hilton.com
+      ADMIN_PASSWORD: admin123
       JWT_SECRET: change-me-in-prod
       JWT_EXPIRE: 7d
       LOG_LEVEL: info

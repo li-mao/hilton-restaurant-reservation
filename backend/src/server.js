@@ -3,6 +3,7 @@ const express = require('express');
 const cors = require('cors');
 const { ApolloServer } = require('apollo-server-express');
 const { connectDB } = require('./config/database');
+const { ensureAdminExists } = require('./utils/seed');
 const logger = require('./utils/logger');
 const errorHandler = require('./middleware/errorHandler');
 
@@ -18,8 +19,8 @@ const healthRoutes = require('./routes/health');
 
 const app = express();
 
-// Connect to database
-connectDB();
+// Connect to database and seed default data
+connectDB().then(() => ensureAdminExists());
 
 // Create logs directory
 const fs = require('fs');
