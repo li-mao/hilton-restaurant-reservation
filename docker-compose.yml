@@ -1,6 +1,7 @@
 services:
   mongodb:
-    image: docker.1ms.run/library/mongo:6.0
+    # image: docker.1ms.run/library/mongo:6.0
+    image: mongo:6.0
     container_name: hilton_mongodb
     ports:
       - "27017:27017"
@@ -9,7 +10,8 @@ services:
     restart: unless-stopped
 
   backend:
-    image: docker.1ms.run/library/node:20-slim
+    # image: docker.1ms.run/library/node:20-slim
+    image: node:20-slim
     container_name: hilton_backend
     working_dir: /app
     volumes:
@@ -33,7 +35,8 @@ services:
     restart: unless-stopped
 
   frontend:
-    image: docker.1ms.run/library/node:20-slim
+    # image: docker.1ms.run/library/node:20-slim
+    image: node:20-slim
     container_name: hilton_frontend
     working_dir: /app
     volumes:
