@@ -38,9 +38,12 @@ jobs:
       - name: Run final tests
         working-directory: backend
         run: |
+          cd ..
+          ls -la
           chmod +x ./deploy.sh
           ./deploy.sh
           sleep 30
+          cd backend
           BASE_URL=http://localhost:5000 npm run bdd
 
       - name: Deploy to production

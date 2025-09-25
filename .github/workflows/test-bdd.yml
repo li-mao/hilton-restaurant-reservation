@@ -1,4 +1,4 @@
-name: BDD Tests
+name: Test BDD
 
 on:
   push:
@@ -7,7 +7,7 @@ on:
     branches: [ main, master, develop ]
 
 jobs:
-  bdd-tests:
+  test-bdd:
     runs-on: ubuntu-latest
     
     steps:
@@ -28,8 +28,14 @@ jobs:
 
       - name: Start services with Docker Compose
         run: |
+          echo "Current directory: $(pwd)"
+          echo "Files in current directory:"
           ls -la
+          echo "Checking deploy.sh:"
+          ls -la deploy.sh || echo "deploy.sh not found"
+          echo "Making deploy.sh executable:"
           chmod +x ./deploy.sh
+          echo "Running deploy.sh:"
           ./deploy.sh
 
       - name: Wait for services to be ready

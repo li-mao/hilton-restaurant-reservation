@@ -1,4 +1,4 @@
-name: BDD Tests
+name: Simple BDD Test
 
 on:
   push:
@@ -7,7 +7,7 @@ on:
     branches: [ main, master, develop ]
 
 jobs:
-  bdd-tests:
+  bdd-test:
     runs-on: ubuntu-latest
     
     steps:
@@ -26,14 +26,12 @@ jobs:
         working-directory: backend
         run: npm ci
 
-      - name: Start services with Docker Compose
+      - name: Start services
         run: |
-          ls -la
-          chmod +x ./deploy.sh
-          ./deploy.sh
-
-      - name: Wait for services to be ready
-        run: |
+          # Start services directly with docker compose
+          docker compose up -d
+          
+          # Wait for services to be ready
           echo "Waiting for services to start..."
           sleep 30
           

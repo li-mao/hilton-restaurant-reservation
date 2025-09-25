@@ -61,6 +61,7 @@ jobs:
 
       - name: Start services with Docker Compose
         run: |
+          ls -la
           chmod +x ./deploy.sh
           ./deploy.sh
 
