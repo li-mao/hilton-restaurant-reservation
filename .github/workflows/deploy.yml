@@ -1,0 +1,70 @@
+name: Deploy
+
+on:
+  push:
+    branches: [ main, master ]
+  workflow_dispatch:
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    if: github.ref == 'refs/heads/main' || github.ref == 'refs/heads/master'
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+          cache-dependency-path: |
+            backend/package-lock.json
+            frontend/package-lock.json
+
+      - name: Install dependencies
+        working-directory: backend
+        run: npm ci
+
+      - name: Install frontend dependencies
+        working-directory: frontend
+        run: npm ci
+
+      - name: Build frontend
+        working-directory: frontend
+        run: npm run build
+
+      - name: Run final tests
+        working-directory: backend
+        run: |
+          chmod +x ./deploy.sh
+          ./deploy.sh
+          sleep 30
+          BASE_URL=http://localhost:5000 npm run bdd
+
+      - name: Deploy to production
+        run: |
+          echo "🚀 Deploying to production..."
+          echo "In a real scenario, you would:"
+          echo "1. Build Docker images"
+          echo "2. Push to container registry"
+          echo "3. Deploy to cloud platform (AWS, GCP, Azure)"
+          echo "4. Update load balancer configuration"
+          echo "5. Run health checks"
+          
+          # Example deployment commands (customize for your platform):
+          # docker build -t hilton-backend ./backend
+          # docker build -t hilton-frontend ./frontend
+          # docker tag hilton-backend your-registry/hilton-backend:latest
+          # docker tag hilton-frontend your-registry/hilton-frontend:latest
+          # docker push your-registry/hilton-backend:latest
+          # docker push your-registry/hilton-frontend:latest
+          
+          echo "✅ Deployment completed!"
+
+      - name: Cleanup
+        if: always()
+        run: |
+          docker compose down -v || true
+          docker system prune -f || true
