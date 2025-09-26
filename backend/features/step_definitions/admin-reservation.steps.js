@@ -37,33 +37,45 @@ Given('I am an admin user with email {string} and password {string}', async func
     if (response.data.data && response.data.data.register) {
       this.adminToken = response.data.data.register.token;
       this.adminUser = response.data.data.register.user;
+      // console.log('Admin token set from registration');
+    } else if (response.data.errors) {
+      // 注册失败，尝试登录
+      throw new Error('Registration failed: ' + response.data.errors[0].message);
     }
   } catch (error) {
     // 管理员可能已存在，尝试登录
-    const loginUrl = `${this.baseUrl}/graphql`;
-    const loginMutation = {
-      query: `
-        mutation Login($email: String!, $password: String!) {
-          login(email: $email, password: $password) {
-            token
-            user {
-              id
-              name
-              email
-              role
+    try {
+      const loginUrl = `${this.baseUrl}/graphql`;
+      const loginMutation = {
+        query: `
+          mutation Login($email: String!, $password: String!) {
+            login(email: $email, password: $password) {
+              token
+              user {
+                id
+                name
+                email
+                role
+              }
             }
           }
+        `,
+        variables: {
+          email: email,
+          password: password
         }
-      `,
-      variables: {
-        email: email,
-        password: password
-      }
-    };
+      };
 
-    const loginResponse = await axios.post(loginUrl, loginMutation);
-    this.adminToken = loginResponse.data.data.login.token;
-    this.adminUser = loginResponse.data.data.login.user;
+      const loginResponse = await axios.post(loginUrl, loginMutation);
+      if (loginResponse.data.data && loginResponse.data.data.login) {
+        this.adminToken = loginResponse.data.data.login.token;
+        this.adminUser = loginResponse.data.data.login.user;
+        // console.log('Admin token set from login');
+      }
+    } catch (loginError) {
+      console.log('Admin login error:', loginError.response?.data || loginError.message);
+      throw loginError;
+    }
   }
 });
 
@@ -108,8 +120,10 @@ Given('there are existing reservations A, B, and C created by guests', async fun
 
   // 为每个预订创建客户用户并创建预订
   for (const reservation of reservations) {
+    // console.log(`Creating reservation ${reservation.key}...`);
     // 创建客户用户
     const guestEmail = `guest${reservation.key.toLowerCase()}@example.com`;
+    // console.log(`Guest email: ${guestEmail}`);
     const registerMutation = {
       query: `
         mutation Register($name: String!, $email: String!, $password: String!, $phone: String!, $role: String) {
@@ -136,25 +150,39 @@ Given('there are existing reservations A, B, and C created by guests', async fun
     let guestToken;
     try {
       const registerResponse = await axios.post(`${this.baseUrl}/graphql`, registerMutation);
-      guestToken = registerResponse.data.data.register.token;
+      if (registerResponse.data.data && registerResponse.data.data.register) {
+        guestToken = registerResponse.data.data.register.token;
+      } else if (registerResponse.data.errors) {
+        // 注册失败，尝试登录
+        throw new Error('Registration failed: ' + registerResponse.data.errors[0].message);
+      }
     } catch (error) {
       // 用户可能已存在，尝试登录
-      const loginMutation = {
-        query: `
-          mutation Login($email: String!, $password: String!) {
-            login(email: $email, password: $password) {
-              token
+      try {
+        const loginMutation = {
+          query: `
+            mutation Login($email: String!, $password: String!) {
+              login(email: $email, password: $password) {
+                token
+              }
             }
+          `,
+          variables: {
+            email: guestEmail,
+            password: 'password123'
           }
-        `,
-        variables: {
-          email: guestEmail,
-          password: 'password123'
+        };
+        const loginResponse = await axios.post(`${this.baseUrl}/graphql`, loginMutation);
+        if (loginResponse.data.data && loginResponse.data.data.login) {
+          guestToken = loginResponse.data.data.login.token;
         }
-      };
-      const loginResponse = await axios.post(`${this.baseUrl}/graphql`, loginMutation);
-      guestToken = loginResponse.data.data.login.token;
+      } catch (loginError) {
+        console.log(`Failed to authenticate guest user ${guestEmail}:`, loginError.message);
+        throw loginError;
+      }
     }
+    
+    // console.log(`Guest token for ${reservation.key}:`, guestToken ? 'obtained' : 'failed');
 
     // 创建预订
     const createReservationMutation = {
@@ -169,7 +197,16 @@ Given('there are existing reservations A, B, and C created by guests', async fun
         }
       `,
       variables: {
-        input: reservation.data
+        input: {
+          guestName: reservation.data.guestName,
+          guestContactInfo: {
+            phone: reservation.data.phone,
+            email: reservation.data.email
+          },
+          expectedArrivalTime: reservation.data.expectedArrivalTime,
+          tableSize: parseInt(reservation.data.tableSize),
+          specialRequests: reservation.data.specialRequests
+        }
       }
     };
 
@@ -178,8 +215,21 @@ Given('there are existing reservations A, B, and C created by guests', async fun
       'Authorization': `Bearer ${guestToken}`
     };
 
-    const response = await axios.post(`${this.baseUrl}/graphql`, createReservationMutation, { headers });
-    global.reservationData[reservation.key] = response.data.data.createReservation;
+    // console.log(`Creating reservation ${reservation.key} with token:`, guestToken ? 'valid' : 'invalid');
+    try {
+      const response = await axios.post(`${this.baseUrl}/graphql`, createReservationMutation, { headers });
+      // console.log(`Create reservation ${reservation.key} response:`, JSON.stringify(response.data, null, 2));
+      if (response.data.data && response.data.data.createReservation) {
+        global.reservationData[reservation.key] = response.data.data.createReservation;
+        // console.log(`Successfully created reservation ${reservation.key}`);
+      } else {
+        console.log(`Failed to create reservation ${reservation.key}:`, response.data);
+        throw new Error(`Failed to create reservation ${reservation.key}`);
+      }
+    } catch (error) {
+      console.log(`Error creating reservation ${reservation.key}:`, error.response?.data || error.message);
+      throw error;
+    }
   }
 });
 
@@ -216,10 +266,12 @@ When(/^I as admin cancel reservation (\w+)$/, async function (reservationKey) {
 
   try {
     this.response = await axios.post(url, cancelReservationMutation, { headers });
+    // console.log(`Cancel reservation ${reservationKey} response:`, JSON.stringify(this.response.data, null, 2));
     if (this.response.data.data && this.response.data.data.cancelReservation) {
       global.reservationData[reservationKey] = { ...global.reservationData[reservationKey], ...this.response.data.data.cancelReservation };
     }
   } catch (error) {
+    console.log(`Cancel reservation ${reservationKey} error:`, error.response?.data || error.message);
     this.response = { data: { errors: error.response?.data?.errors || [{ message: error.message }] } };
   }
 });
@@ -251,6 +303,7 @@ When(/^I as admin approve reservation (\w+)$/, async function (reservationKey) {
 
   try {
     this.response = await axios.post(url, approveReservationMutation, { headers });
+    // console.log(`Approve reservation ${reservationKey} response:`, JSON.stringify(this.response.data, null, 2));
     if (this.response.data.data && this.response.data.data.approveReservation) {
       global.reservationData[reservationKey] = { ...global.reservationData[reservationKey], ...this.response.data.data.approveReservation };
     }

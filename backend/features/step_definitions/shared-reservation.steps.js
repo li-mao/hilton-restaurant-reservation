@@ -17,8 +17,9 @@ Then(/^reservation (\w+) should be cancelled successfully$/, function (reservati
 
 // 验证预订批准成功 - 共享步骤
 Then(/^reservation (\w+) should be approved successfully$/, function (reservationKey) {
-  expect(this.response.data.data).toBeDefined();
-  expect(this.response.data.data.approveReservation).toBeDefined();
+  // 检查全局数据中的预订状态
+  expect(global.reservationData[reservationKey]).toBeDefined();
+  expect(global.reservationData[reservationKey].status).toBe('approved');
 });
 
 // 验证预订完成成功 - 共享步骤

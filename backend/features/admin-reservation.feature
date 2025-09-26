@@ -20,8 +20,9 @@ Feature: Admin Reservation Management
     And reservation C status should be "approved"
 
   Scenario: Admin completes reservation C
-    Given reservation C exists with status "approved"
-    When I as admin complete reservation C
+    Given reservation C exists with status "requested"
+    When I as admin approve reservation C
+    And I as admin complete reservation C
     Then reservation C should be completed successfully
     And reservation C status should be "completed"
 
