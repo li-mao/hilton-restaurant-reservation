@@ -120,7 +120,7 @@ npm run bdd -- --dry-run
 - 角色：`guest`
 
 #### 管理员用户
-- 邮箱：`admin@example.com`
+- 邮箱：`admin@hilton.com`
 - 密码：`admin123`
 - 角色：`admin`
 

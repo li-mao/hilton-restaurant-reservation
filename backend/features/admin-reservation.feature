@@ -4,7 +4,7 @@ Feature: Admin Reservation Management
   So that I can approve, cancel and complete customer reservations
 
   Background:
-    Given I am an admin user with email "admin@example.com" and password "admin123"
+    Given I am an admin user with email "admin@hilton.com" and password "admin123"
     And there are existing reservations A, B, and C created by guests
 
   Scenario: Admin cancels reservation B
