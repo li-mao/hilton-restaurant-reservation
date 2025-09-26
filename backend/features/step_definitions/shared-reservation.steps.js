@@ -2,14 +2,11 @@ const { Given, When, Then } = require('@cucumber/cucumber');
 const { expect } = require('expect');
 
 // 共享的预订数据存储
-let reservationData = {};
-
-// 导出数据存储，供其他文件使用
-global.reservationData = reservationData;
+global.reservationData = global.reservationData || {};
 
 // 验证预订状态 - 共享步骤
 Then(/^reservation (\w+) status should be "([^"]*)"$/, function (reservationKey, expectedStatus) {
-  expect(reservationData[reservationKey].status).toBe(expectedStatus);
+  expect(global.reservationData[reservationKey].status).toBe(expectedStatus);
 });
 
 // 验证预订取消成功 - 共享步骤
@@ -34,8 +31,8 @@ Then(/^reservation (\w+) should be completed successfully$/, function (reservati
 Then(/^reservation (\w+) should be created successfully$/, function (reservationKey) {
   expect(this.response.data.data).toBeDefined();
   expect(this.response.data.data.createReservation).toBeDefined();
-  expect(reservationData[reservationKey]).toBeDefined();
-  expect(reservationData[reservationKey].id).toBeDefined();
+  expect(global.reservationData[reservationKey]).toBeDefined();
+  expect(global.reservationData[reservationKey].id).toBeDefined();
 });
 
 // 验证预订更新成功 - 共享步骤
@@ -46,5 +43,5 @@ Then(/^reservation (\w+) should be updated successfully$/, function (reservation
 
 // 验证预订桌数 - 共享步骤
 Then(/^reservation (\w+) table size should be (\d+)$/, function (reservationKey, expectedTableSize) {
-  expect(reservationData[reservationKey].tableSize).toBe(parseInt(expectedTableSize));
+  expect(global.reservationData[reservationKey].tableSize).toBe(parseInt(expectedTableSize));
 });

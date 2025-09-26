@@ -3,7 +3,7 @@ const axios = require('axios');
 const { expect } = require('expect');
 
 // 存储预订数据的全局变量（与reservation.steps.js共享）
-let reservationData = {};
+global.reservationData = global.reservationData || {};
 
 // Background: 创建管理员用户
 Given('I am an admin user with email {string} and password {string}', async function (email, password) {
@@ -179,19 +179,19 @@ Given('there are existing reservations A, B, and C created by guests', async fun
     };
 
     const response = await axios.post(`${this.baseUrl}/graphql`, createReservationMutation, { headers });
-    reservationData[reservation.key] = response.data.data.createReservation;
+    global.reservationData[reservation.key] = response.data.data.createReservation;
   }
 });
 
 // 验证预订存在且状态正确
 Given(/^reservation (\w+) exists with status "([^"]*)"$/, function (reservationKey, expectedStatus) {
-  expect(reservationData[reservationKey]).toBeDefined();
-  expect(reservationData[reservationKey].status).toBe(expectedStatus);
+  expect(global.reservationData[reservationKey]).toBeDefined();
+  expect(global.reservationData[reservationKey].status).toBe(expectedStatus);
 });
 
 // 管理员取消预订
 When(/^I as admin cancel reservation (\w+)$/, async function (reservationKey) {
-  const reservation = reservationData[reservationKey];
+  const reservation = global.reservationData[reservationKey];
   
   const cancelReservationMutation = {
     query: `
@@ -217,7 +217,7 @@ When(/^I as admin cancel reservation (\w+)$/, async function (reservationKey) {
   try {
     this.response = await axios.post(url, cancelReservationMutation, { headers });
     if (this.response.data.data && this.response.data.data.cancelReservation) {
-      reservationData[reservationKey] = { ...reservationData[reservationKey], ...this.response.data.data.cancelReservation };
+      global.reservationData[reservationKey] = { ...global.reservationData[reservationKey], ...this.response.data.data.cancelReservation };
     }
   } catch (error) {
     this.response = { data: { errors: error.response?.data?.errors || [{ message: error.message }] } };
@@ -226,7 +226,7 @@ When(/^I as admin cancel reservation (\w+)$/, async function (reservationKey) {
 
 // 管理员批准预订
 When(/^I as admin approve reservation (\w+)$/, async function (reservationKey) {
-  const reservation = reservationData[reservationKey];
+  const reservation = global.reservationData[reservationKey];
   
   const approveReservationMutation = {
     query: `
@@ -252,7 +252,7 @@ When(/^I as admin approve reservation (\w+)$/, async function (reservationKey) {
   try {
     this.response = await axios.post(url, approveReservationMutation, { headers });
     if (this.response.data.data && this.response.data.data.approveReservation) {
-      reservationData[reservationKey] = { ...reservationData[reservationKey], ...this.response.data.data.approveReservation };
+      global.reservationData[reservationKey] = { ...global.reservationData[reservationKey], ...this.response.data.data.approveReservation };
     }
   } catch (error) {
     this.response = { data: { errors: error.response?.data?.errors || [{ message: error.message }] } };
@@ -261,7 +261,7 @@ When(/^I as admin approve reservation (\w+)$/, async function (reservationKey) {
 
 // 管理员完成预订
 When(/^I as admin complete reservation (\w+)$/, async function (reservationKey) {
-  const reservation = reservationData[reservationKey];
+  const reservation = global.reservationData[reservationKey];
   
   const completeReservationMutation = {
     query: `
@@ -287,7 +287,7 @@ When(/^I as admin complete reservation (\w+)$/, async function (reservationKey) 
   try {
     this.response = await axios.post(url, completeReservationMutation, { headers });
     if (this.response.data.data && this.response.data.data.completeReservation) {
-      reservationData[reservationKey] = { ...reservationData[reservationKey], ...this.response.data.data.completeReservation };
+      global.reservationData[reservationKey] = { ...global.reservationData[reservationKey], ...this.response.data.data.completeReservation };
     }
   } catch (error) {
     this.response = { data: { errors: error.response?.data?.errors || [{ message: error.message }] } };
